@@ -40,10 +40,77 @@
   Testing the server - run `npm run test-todoServer` command in terminal
  */
 const express = require('express');
+const fs = require('fs');
 const bodyParser = require('body-parser');
-
 const app = express();
-
+const port = 3000;
+var todos = [];
 app.use(bodyParser.json());
+
+fs.readFile("todoServerData.json", "utf-8", (err, data) => {
+  if (err) console.log("Cannot find the Todo Server data file")
+  else {
+    todos = JSON.parse(data);
+  }
+})
+
+
+function writeInFile(data) {
+  fs.writeFile("todoServerData.json", JSON.stringify(todos), () => {
+    console.log("writing in a file is done")
+  })
+}
+
+
+
+app.get('/todos', (req, res) => {
+  res.send(todos);
+})
+
+app.get('/todos/:id', (req, res) => {
+  let index = req.params.id;
+  if (index > 0 && index <= todos.length) res.send(todos[index - 1])
+  else res.status(404).send("No todo found");
+});
+
+app.post('/todos', (req, res) => {
+  let todo = req.body;
+  todo = { ...todo, id: todos.length + 1 };
+  todos.push(todo);
+
+  writeInFile(JSON.stringify(todos));
+
+  res.status(201).send(todo);
+});
+
+app.put('/todos/:id', (req, res) => {
+  let index = req.params.id;
+  if (index > 0 && index <= todos.length) {
+    let updatedTodo = { ...todos[index - 1], ...req.body }
+    todos[index - 1] = updatedTodo;
+    writeInFile(JSON.stringify(todos))
+    res.send(updatedTodo);
+  }
+  else res.status(404).send("No todo found");
+
+});
+
+app.delete('/todos/:id', (req, res) => {
+  let index = req.params.id;
+  if (index > 0 && index <= todos.length) {
+    todos = todos.filter((data) => {
+      if (index != data.id) return data;
+    })
+    writeInFile(JSON.stringify(todos))
+    res.send(todos);
+  } else res.status(404).send("No todo found");
+});
+
+
+app.listen(port, () => {
+  console.log(`Todo Server is listening on port ${port}`);
+});
+
+
 
 module.exports = app;

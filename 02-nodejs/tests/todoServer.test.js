@@ -60,6 +60,7 @@ describe('Todo API', () => {
       let data = '';
 
       res.on('data', (chunk) => {
+        console.log(chunk)
         data += chunk;
       });
 
