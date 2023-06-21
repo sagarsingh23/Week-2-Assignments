@@ -56,7 +56,7 @@ fs.readFile("todoServerData.json", "utf-8", (err, data) => {
 
 
 function writeInFile(data) {
-  fs.writeFile("todoServerData.json", JSON.stringify(todos), () => {
+  fs.writeFile("todoServerData.json", data, () => {
     console.log("writing in a file is done")
   })
 }
@@ -68,42 +68,38 @@ app.get('/todos', (req, res) => {
 })
 
 app.get('/todos/:id', (req, res) => {
-  let index = req.params.id;
-  if (index > 0 && index <= todos.length) res.send(todos[index - 1])
-  else res.status(404).send("No todo found");
+  const todo = todos.find(t => t.id === parseInt(req.params.id))
+  if (!todo) res.status(404).send("No todo found");
+  else res.json(todo);
 });
 
 app.post('/todos', (req, res) => {
   let todo = req.body;
-  todo = { ...todo, id: todos.length + 1 };
+  todo = { ...todo, id: Math.floor(Math.random() * 100000) };
+  console.log(todo)
   todos.push(todo);
-
   writeInFile(JSON.stringify(todos));
-
   res.status(201).send(todo);
 });
 
 app.put('/todos/:id', (req, res) => {
-  let index = req.params.id;
-  if (index > 0 && index <= todos.length) {
-    let updatedTodo = { ...todos[index - 1], ...req.body }
-    todos[index - 1] = updatedTodo;
+  const todoIndex = todos.findIndex(t => t.id === parseInt(req.params.id));
+  if (todoIndex === -1) res.status(404).send("No Todo found");
+  else {
+    todos[todoIndex] = { ...todos[todoIndex], ...req.body }
     writeInFile(JSON.stringify(todos))
-    res.send(updatedTodo);
+    res.json(todos[todoIndex])
   }
-  else res.status(404).send("No todo found");
-
 });
 
 app.delete('/todos/:id', (req, res) => {
-  let index = req.params.id;
-  if (index > 0 && index <= todos.length) {
-    todos = todos.filter((data) => {
-      if (index != data.id) return data;
-    })
+  const todoIndex = todos.findIndex(t => t.id === parseInt(req.params.id))
+  if (todoIndex === -1) res.status(404).send("No Todo found");
+  else {
+    todos.splice(todoIndex, 1);
     writeInFile(JSON.stringify(todos))
-    res.send(todos);
-  } else res.status(404).send("No todo found");
+    res.status(200).send();
+  }
 });
 
 app.use((req, res, next) => {

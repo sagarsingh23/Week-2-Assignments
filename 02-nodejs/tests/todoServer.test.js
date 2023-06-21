@@ -60,7 +60,6 @@ describe('Todo API', () => {
       let data = '';
 
       res.on('data', (chunk) => {
-        console.log(chunk)
         data += chunk;
       });
 
@@ -122,6 +121,7 @@ describe('Todo API', () => {
     const options = {
       method: 'DELETE',
     };
+    console.log(createdTodoId)
 
     const req = http.request(
       `${baseUrl}/todos/${createdTodoId}`,
